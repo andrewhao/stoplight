@@ -1,0 +1,29 @@
+{
+  "name": "rxlocation",
+  "version": "0.0.1",
+  "description": "GPX track stats library",
+  "main": "rxlocation.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/andrewhao/rxlocation.git"
+  },
+  "keywords": [
+    "gpx",
+    "stats",
+    "gps",
+    "coordinates",
+    "frp"
+  ],
+  "author": "Andrew Hao",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/andrewhao/rxlocation/issues"
+  },
+  "homepage": "https://github.com/andrewhao/rxlocation",
+  "devDependencies": {
+    "gpx-stream": "0.0.2"
+  }
+}
