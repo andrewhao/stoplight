@@ -26,8 +26,6 @@
   "devDependencies": {
     "baconjs": "^0.7.53",
     "gps-util": "0.0.26",
-    "gpx-stream": "0.0.2",
-    "rx": "^2.5.2",
-    "rx-node": "^1.0.0"
+    "gpx-stream": "0.0.2"
   }
 }
