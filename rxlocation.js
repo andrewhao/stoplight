@@ -19,12 +19,13 @@ locationStream.on('end', function() {
   var pairIntervalStream = liveStream
                              .slidingWindow(2)
                              .filter(function(pairs) {
-                               return (pairs.length == 2 && pairs[0] !== null && pairs[1] !== null)
+                               return (pairs.length == 2 &&
+                                       pairs[0] !== null &&
+                                       pairs[1] !== null)
                              });
 
   pairIntervalStream.onValue(function(v) {
-    console.log("-------------------------------------------------------------------------\n\n\n");
-    console.log("-------------------------------------------------------------------------");
+    console.log("\n\n\n-------------------------------------------------------------------------\n\n\n");
     console.log(v);
   });
 
@@ -58,25 +59,25 @@ locationStream.on('end', function() {
     return seconds;
   });
 
-  var velocityStream = distanceStream.sampledBy(timeDeltaStream,
-                                                function(meters, seconds) {
+  var velocityStream = distanceStream
+                         .sampledBy(timeDeltaStream,
+                                    function(meters, seconds) {
     return meters / seconds;
-  });
-
-  velocityStream.subscribe(function(velocity) {
-    console.log("instantaneous velocity is: %s m/s", velocity);
   });
 
   var movementChangeStream = velocityStream.map(function(v) {
     return (v > 2.5) ? "moving" : "stopped";
-  }).skipDuplicates();
+  }).skipDuplicates()
+    .onValue(function(status) {
+      console.log("STATE CHANGE: %s", status);
+    });
 
-  movementChangeStream.onValue(function(status) { console.log(status); });
 
   var sampleCountStream = Bacon.repeat(function(i) { return i; })
   var totalDistanceStream = distanceStream
                               .scan(0, function(acc, d) { return acc + d })
-                              .onValue(function(v) { console.log("total distance so far: %s", v) });
+  var totalTimeStream = timeDeltaStream
+                          .scan(0, function(acc, d) { return acc + d })
   var totalSamplesStream = distanceStream
                              .scan(0, function(a, b) { return a + 1 })
                              .onValue(function(v) { console.log("total samples: %s", v); });
@@ -85,11 +86,14 @@ locationStream.on('end', function() {
         .scan(0, function(a, b) { return a + b })
         .onValue(function(v) { console.log("elevation change from start is: %s", v);} );
 
-  var averageVelocityStream = sampleCountStream
-                                .sampledBy(velocityStream,
-                                           function(c, v) {
-                                             console.log(c);
-                                             console.log(v);
+  var averageVelocityStream = totalTimeStream
+                                .sampledBy(totalDistanceStream,
+                                           function(seconds, distance) {
+                                             return distance / seconds;
                                            })
-                                .onValue(function(v) { console.log(v) });
+                                .onValue(function(v) { console.log("average velocity so far: %s", v) });
+  velocityStream.subscribe(function(velocity) {
+    console.log("instantaneous velocity is: %s m/s", velocity);
+  });
+
 });
