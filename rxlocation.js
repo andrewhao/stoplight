@@ -15,13 +15,13 @@ locationStream.on('readable', function() {
 });
 
 locationStream.on('end', function() {
-  var liveStream = Bacon.sequentially(1000, points);
+  var liveStream = Bacon.sequentially(0, points);
   var pairIntervalStream = liveStream
                              .slidingWindow(2)
                              .filter(function(pairs) {
                                return (pairs.length == 2 &&
                                        pairs[0] !== null &&
-                                       pairs[1] !== null)
+                                       pairs[1] !== null);
                              });
 
   pairIntervalStream.onValue(function(v) {
