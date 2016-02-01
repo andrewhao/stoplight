@@ -14,7 +14,6 @@ let pointStream = fileStream
                     .flatMap((segment) => segment)
 
 let pairIntervalStream = pointStream.pairwise()
-let subscription = pointStream.subscribe()
 
 let distanceStream = pairIntervalStream.map((pairs) => {
   let [p1, p2] = pairs;
@@ -40,13 +39,23 @@ let timeDeltaStream = pairIntervalStream.map((pairs) => {
   return seconds;
 })
 
-var velocityStream = Rx.Observable.combineLatest(
+var velocityStream = Rx.Observable.zip(
   distanceStream,
   timeDeltaStream,
-  (meters, seconds) => meters / seconds
+  (meters, seconds) => {
+    return {
+      distance: meters,
+      time: seconds,
+      velocity: meters / seconds
+    }
+  }
 )
-.subscribe((v) => console.log(v));
-//
+
+velocityStream.map((d) => (d.velocity < 0.5 ? 'stopped' : 'moving'))
+.catch((e) => console.log(e))
+.subscribe((v) => console.log(v))
+
+
 //   var movementChangeStream = velocityStream.map(function(v) {
 //     return (v > 2.5) ? "moving" : "stopped";
 //   }).skipDuplicates()
