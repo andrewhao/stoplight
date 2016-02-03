@@ -9,4 +9,4 @@ to watch out for.
 
 ## Usage
 
-    $ node runner.js
+    $ node runner.js path/to/file.gpx
