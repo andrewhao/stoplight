@@ -15,43 +15,25 @@ let pointStream = fileStream
 
 let pairIntervalStream = pointStream.pairwise()
 
-let distanceStream = pairIntervalStream.map((pairs) => {
+let combinedStatStream = pairIntervalStream.map((pairs) => {
   let [p1, p2] = pairs;
 
-  let dist = geo.haversineSync({latitude: p1.lat, longitude: p1.lon},
+  const dist = geo.haversineSync({latitude: p1.lat, longitude: p1.lon},
                                {latitude: p2.lat, longitude: p2.lon});
-  return dist;
-})
-
-let elevationDeltaStream = pairIntervalStream.map((pairs) => {
-  let [p1, p2] = pairs;
-  return p2.elevation - p1.elevation
-});
-
-let timeDeltaStream = pairIntervalStream.map((pairs) => {
-  const [p1, p2] = pairs;
-
   const t1 = Date.parse(p1.time);
   const t2 = Date.parse(p2.time);
-
   const delta = t2 - t1;
   const seconds = delta / 1000;
-  return seconds;
+
+  return {
+    velocity: dist / seconds,
+    lat: p2.lat,
+    lon: p2.lon,
+    elapsedTime: seconds
+  };
 })
 
-var velocityStream = Rx.Observable.zip(
-  distanceStream,
-  timeDeltaStream,
-  (meters, seconds) => {
-    return {
-      distance: meters,
-      time: seconds,
-      velocity: meters / seconds
-    }
-  }
-)
-
-velocityStream.map((d) => (d.velocity < 0.5 ? 'stopped' : 'moving'))
+combinedStatStream.filter((d) => d.velocity < 0.5)
 .catch((e) => console.log(e))
 .subscribe((v) => console.log(v))
 

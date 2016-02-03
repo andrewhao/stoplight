@@ -1,8 +1,12 @@
-# rxlocation
-GPX location library implemented with FRP concepts
+# Stopsign
 
-Given a stream of location change events that fluctuate over time,
-return a stream of instantaneous velocities, and
-return another stream of zero velocity, and
-return another stream of "stop" and "start" events.
+Given a range of GPX data from a GPS device, return a list of
+coordinates that the user is stopped at and for how long.
 
+This type of data is useful for determining a person's longest stops at
+which intersections - giving a cyclist a good idea of which stoplights
+to watch out for.
+
+## Usage
+
+    $ node runner.js
