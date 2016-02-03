@@ -1,4 +1,4 @@
-# Stopsign
+# Stoplight
 
 Given a range of GPX data from a GPS device, return a list of
 coordinates that the user is stopped at and for how long.

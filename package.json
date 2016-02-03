@@ -1,14 +1,14 @@
 {
-  "name": "rxlocation",
+  "name": "stoplight",
   "version": "0.0.1",
   "description": "GPX track stats library",
-  "main": "rxlocation.js",
+  "main": "stoplight.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/andrewhao/rxlocation.git"
+    "url": "https://github.com/andrewhao/stoplight.git"
   },
   "engines": {
     "node": ">= 4.2.1",
@@ -24,14 +24,11 @@
   "author": "Andrew Hao",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/andrewhao/rxlocation/issues"
+    "url": "https://github.com/andrewhao/stoplight/issues"
   },
-  "homepage": "https://github.com/andrewhao/rxlocation",
+  "homepage": "https://github.com/andrewhao/stoplight",
   "dependencies": {
-    "baconjs": "^0.7.83",
-    "bluebird": "^3.1.5",
     "gpx-parse": "^0.9.0",
-    "lodash": "^4.1.0",
     "node-geo-distance": "^1.2.0",
     "rx": "^4.0.7"
   },
