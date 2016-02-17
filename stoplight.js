@@ -5,6 +5,8 @@ import Rx from 'rx';
 import geo from 'node-geo-distance';
 import Promise from 'bluebird';
 
+const VELOCITY_THRESHOLD = 0.5;
+
 class Stoplight {
   stopsFromGpx(path) {
     let parseGpx = Rx.Observable.fromNodeCallback(gpxParse.parseGpxFromFile);
@@ -34,7 +36,7 @@ class Stoplight {
       };
     })
 
-    let stopStream = combinedStatStream.filter((d) => d.velocity < 0.5);
+    let stopStream = combinedStatStream.filter((d) => d.velocity < VELOCITY_THRESHOLD);
     return stopStream.reduce((acc, evt) => acc.concat(evt), [])
     .toPromise(Promise);
   }
@@ -52,7 +54,7 @@ class Stoplight {
         elapsedTime: elapsedTime,
       }
     })
-    .filter((d) => d.velocity < 0.5)
+    .filter((d) => d.velocity < VELOCITY_THRESHOLD)
     .scan((acc, evt) => acc.concat(evt), [])
     .toPromise(Promise);
 	}
