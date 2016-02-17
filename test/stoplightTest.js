@@ -1,4 +1,4 @@
-import Stoplight from '../stoplight';
+import Stoplight from '../src/stoplight';
 import { expect } from 'chai';
 
 describe('Stoplight', () => {
