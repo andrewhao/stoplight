@@ -1,6 +1,6 @@
 {
   "name": "stoplight",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "GPX track stats library",
   "main": "stoplight.js",
   "scripts": {
