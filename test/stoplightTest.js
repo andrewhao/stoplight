@@ -75,7 +75,7 @@ describe('Stoplight', () => {
             -118.490377
           ],
           "distance": 7.4,
-          "velocity": 1.7
+          "velocity": 0.08
         },
         {
           "time": 3,
@@ -84,14 +84,23 @@ describe('Stoplight', () => {
             -118.490399
           ],
           "distance": 12.3,
-          "velocity": 2.8
+          "velocity": 0
+        },
+        {
+          "time": 4,
+          "latlng": [
+            34.015237,
+            -118.490399
+          ],
+          "distance": 19.3,
+          "velocity": 10
         }
       ];
       const expectedResult = [
         { velocity: 0,
-          lat: 34.015308,
-          lon: -118.490385,
-          elapsedTime: 2 }
+          lat: 34.015237,
+          lon: -118.490399,
+          elapsedTime: 3 }
         ];
 
       let result = subject.stopsFromZippedStravaStream(input);

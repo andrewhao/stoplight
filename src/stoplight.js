@@ -48,14 +48,21 @@ class Stoplight {
       const [p1, p2] = pairs;
       const elapsedTime = p2.time - p1.time
       return {
-        velocity: p1.velocity,
-        lat: p1.latlng[0],
-        lon: p1.latlng[1],
+        velocity: p2.velocity,
+        lat: p2.latlng[0],
+        lon: p2.latlng[1],
         elapsedTime: elapsedTime,
       }
     })
+    .groupBy((d) => d.velocity < VELOCITY_THRESHOLD)
+    .flatMap((group) => {
+      return group
+        .reduce((acc, evt) => {
+          return Object.assign({}, evt, { elapsedTime: acc.elapsedTime + evt.elapsedTime })
+        }, { elapsedTime: 0 })
+    })
     .filter((d) => d.velocity < VELOCITY_THRESHOLD)
-    .scan((acc, evt) => acc.concat(evt), [])
+    .toArray()
     .toPromise(Promise);
 	}
 }
