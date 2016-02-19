@@ -1,6 +1,6 @@
 {
   "name": "stoplight",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "GPX track stats library",
   "main": "lib/stoplight.js",
   "scripts": {
@@ -43,6 +43,7 @@
     "babel-register": "6.5.2",
     "chai": "3.5.0",
     "mocha": "2.4.5",
+    "node-fetch": "^1.3.3",
     "webpack": "^1.12.12"
   }
 }

@@ -7,6 +7,25 @@ import Promise from 'bluebird';
 
 const VELOCITY_THRESHOLD = 0.5;
 
+const elapsedTimeFn = (past, current) => {
+  const elapsedTime = (past.time !== undefined) ? current.time - past.time : 0;
+  const newObj =  Object.assign(
+    {},
+    current,
+    {
+      elapsedTime: past.elapsedTime + elapsedTime,
+      time: current.time
+    }
+  )
+  return newObj;
+}
+const pointDecorationFn = (d) => ({
+  velocity: d.velocity,
+  lat: d.latlng[0],
+  lon: d.latlng[1],
+  elapsedTime: d.elapsedTime,
+})
+
 class Stoplight {
   stopsFromGpx(path) {
     let parseGpx = Observable.fromNodeCallback(gpxParse.parseGpxFromFile);
@@ -69,25 +88,13 @@ class Stoplight {
     .groupBy(p => p.startingIndex)
 
     return eventsFromStrava
-    .flatMap((group) => {
-      return group
-        .pairwise()
-        .reduce((acc, pairs) => {
-          const [e1, e2] = pairs;
-          const elapsedTime = e2.time - e1.time;
-          return Object.assign({}, e2, {
-                                 elapsedTime: acc.elapsedTime + elapsedTime
-                               })
-        }, { elapsedTime: 0 })
+    .flatMap((g) => {
+      return g
+      .reduce(elapsedTimeFn, { elapsedTime: 0 })
     })
-    .map((d) => ({
-      velocity: d.velocity,
-      lat: d.latlng[0],
-      lon: d.latlng[1],
-      elapsedTime: d.elapsedTime,
-    }))
+    .map(pointDecorationFn)
     .toArray()
-    .toPromise(Promise);
+    .toPromise(Promise)
 	}
 }
 export default Stoplight;
