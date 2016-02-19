@@ -1,7 +1,7 @@
 import fs from 'fs';
 import util from 'util';
 import gpxParse from 'gpx-parse';
-import Rx from 'rx';
+import { Observable } from 'rx';
 import geo from 'node-geo-distance';
 import Promise from 'bluebird';
 
@@ -9,7 +9,7 @@ const VELOCITY_THRESHOLD = 0.5;
 
 class Stoplight {
   stopsFromGpx(path) {
-    let parseGpx = Rx.Observable.fromNodeCallback(gpxParse.parseGpxFromFile);
+    let parseGpx = Observable.fromNodeCallback(gpxParse.parseGpxFromFile);
     let fileStream = parseGpx(path);
     let pointStream = fileStream
     .flatMap((res) => res.tracks)
@@ -42,26 +42,50 @@ class Stoplight {
   }
 
 	stopsFromZippedStravaStream(input) {
-    return Rx.Observable.from(input)
-    .pairwise()
-    .map((pairs) => {
-      const [p1, p2] = pairs;
-      const elapsedTime = p2.time - p1.time
-      return {
-        velocity: p2.velocity,
-        lat: p2.latlng[0],
-        lon: p2.latlng[1],
-        elapsedTime: elapsedTime,
+    const eventsFromStrava = Observable.from(input)
+    // Decorate with an index counter
+    .scan((acc, point) => {
+      const nextIndex = acc.index + 1
+      return Object.assign({}, point, {
+        index: nextIndex
+      });
+    }, { index: 0 })
+    .filter((d) => d.velocity < VELOCITY_THRESHOLD)
+    // Now mark which startingIndex you are a part of
+    .scan((acc, current) => {
+      let startingIndex;
+      // If part of a matching contiguous group.
+      if (current.index == acc.lastIndex + 1) {
+        startingIndex = acc.startingIndex;
+      } else {
+        // Start the starting index at the current point
+        startingIndex = current.index
       }
-    })
-    .groupBy((d) => d.velocity < VELOCITY_THRESHOLD)
+      return Object.assign({}, current, {
+        startingIndex: startingIndex,
+        lastIndex: current.index
+      });
+    }, { startingIndex: 0, lastIndex: 0 })
+    .groupBy(p => p.startingIndex)
+
+    return eventsFromStrava
     .flatMap((group) => {
       return group
-        .reduce((acc, evt) => {
-          return Object.assign({}, evt, { elapsedTime: acc.elapsedTime + evt.elapsedTime })
+        .pairwise()
+        .reduce((acc, pairs) => {
+          const [e1, e2] = pairs;
+          const elapsedTime = e2.time - e1.time;
+          return Object.assign({}, e2, {
+                                 elapsedTime: acc.elapsedTime + elapsedTime
+                               })
         }, { elapsedTime: 0 })
     })
-    .filter((d) => d.velocity < VELOCITY_THRESHOLD)
+    .map((d) => ({
+      velocity: d.velocity,
+      lat: d.latlng[0],
+      lon: d.latlng[1],
+      elapsedTime: d.elapsedTime,
+    }))
     .toArray()
     .toPromise(Promise);
 	}
