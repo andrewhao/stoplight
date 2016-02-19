@@ -1,5 +1,6 @@
 import Stoplight from '../src/stoplight';
 import { expect } from 'chai';
+import fetch from 'node-fetch';
 import util from 'util';
 
 describe('Stoplight', () => {
@@ -99,6 +100,36 @@ describe('Stoplight', () => {
           lat: 34.00666,
           lon: -118.489319,
           elapsedTime: 2
+        }
+      ];
+
+      let result = subject.stopsFromZippedStravaStream(input);
+      result.then((stops) => {
+        expect(stops).to.deep.equal(expectedResult);
+      })
+      .then(done)
+      .catch((e) => console.log(`Error: ${e}`));
+    });
+
+    it('detects starts, stops, starts (with one-event groups)', (done) => {
+      const input = [
+		  	{ "time": 660, "latlng": [ 34.007145, -118.476151 ], "distance": 4987.5, "velocity": 3.4 },
+		  	{ "time": 746, "latlng": [ 34.007092, -118.476303 ], "distance": 4995.8, "velocity": 0.1 },
+				{ "time": 752, "latlng": [ 34.006878, -118.476685 ], "distance": 5038.7, "velocity": 7.2 },
+				{ "time": 753, "latlng": [ 34.006836, -118.476761 ], "distance": 5047.2, "velocity": 7.6 },
+				{ "time": 762, "latlng": [ 34.00666, -118.489319 ], "distance": 6919.6, "velocity": 0.2 },
+				{ "time": 763, "latlng": [ 34.00666, -118.489319 ], "distance": 6923.7, "velocity": 0.3 },
+      ];
+
+      const expectedResult = [ { velocity: 0.1,
+          lat: 34.007092,
+          lon: -118.476303,
+          elapsedTime: 0
+        }, {
+          velocity: 0.3,
+          lat: 34.00666,
+          lon: -118.489319,
+          elapsedTime: 1
         }
       ];
 
