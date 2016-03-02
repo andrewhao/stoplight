@@ -1,5 +1,5 @@
 import fs from 'fs';
-import util from 'util';
+import { inspect } from 'util';
 import gpxParse from 'gpx-parse';
 import { Observable } from 'rx';
 import geo from 'node-geo-distance';
@@ -7,20 +7,7 @@ import Promise from 'bluebird';
 
 const VELOCITY_THRESHOLD = 0.5;
 
-const elapsedTimeFn = (past, current) => {
-  const elapsedTime = (past.time !== undefined) ? current.time - past.time : 0;
-  const newObj =  Object.assign(
-    {},
-    current,
-    {
-      elapsedTime: past.elapsedTime + elapsedTime,
-      time: current.time
-    }
-  )
-  return newObj;
-}
 const pointDecorationFn = (d) => ({
-  velocity: d.velocity,
   lat: d.latlng[0],
   lon: d.latlng[1],
   elapsedTime: d.elapsedTime,
@@ -31,9 +18,9 @@ class Stoplight {
     let parseGpx = Observable.fromNodeCallback(gpxParse.parseGpxFromFile);
     let fileStream = parseGpx(path);
     let pointStream = fileStream
-    .flatMap((res) => res.tracks)
-    .flatMap((trk) => trk.segments)
-    .flatMap((segment) => segment)
+    .flatMap(res => res.tracks)
+    .flatMap(trk => trk.segments)
+    .flatMap(segment => segment)
 
     let pairIntervalStream = pointStream.pairwise()
 
@@ -61,15 +48,22 @@ class Stoplight {
   }
 
 	stopsFromZippedStravaStream(input) {
-    const eventsFromStrava = Observable.from(input)
+    return Observable.from(input)
+    .pairwise()
+    .map(([p1, p2]) => {
+      const elapsedTime = p2.time - p1.time;
+      const velocity = (p2.distance - p1.distance) / elapsedTime;
+      return Object.assign({}, p2, { velocity, elapsedTime })
+    })
     // Decorate with an index counter
     .scan((acc, point) => {
-      const nextIndex = acc.index + 1
       return Object.assign({}, point, {
-        index: nextIndex
+        index: acc.index + 1
       });
     }, { index: 0 })
-    .filter((d) => d.velocity < VELOCITY_THRESHOLD)
+    .filter(v => v.velocity < VELOCITY_THRESHOLD)
+    // Coalesce points together based on whether you are a part
+    // of an increasing series of start indices.
     // Now mark which startingIndex you are a part of
     .scan((acc, current) => {
       let startingIndex;
@@ -85,12 +79,15 @@ class Stoplight {
         lastIndex: current.index
       });
     }, { startingIndex: 0, lastIndex: 0 })
+    // For some reason, the scan() above emits the default value without any prior values on the stream.
+    // Filter only for "real" values.
+    .filter(v => !isNaN(v.elapsedTime))
     .groupBy(p => p.startingIndex)
-
-    return eventsFromStrava
     .flatMap((g) => {
       return g
-      .reduce(elapsedTimeFn, { elapsedTime: 0 })
+      .reduce((past, current) => {
+        return Object.assign( {}, current, { elapsedTime: past.elapsedTime + current.elapsedTime })
+      }, { elapsedTime: 0 })
     })
     .map(pointDecorationFn)
     .toArray()
